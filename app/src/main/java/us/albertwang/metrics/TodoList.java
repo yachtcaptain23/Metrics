@@ -3,6 +3,7 @@ package us.albertwang.metrics;
 import android.content.Intent;
 import android.content.Context;
 import android.database.sqlite.*;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ public class TodoList extends ActionBarActivity {
 
     @Override
     public void onStart() {
+        super.onStart();
         MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this);
         SQLiteDatabase dbReader = mDbHelper.getReadableDatabase();
         // Populate the TableLayout TODO list
@@ -47,22 +49,23 @@ public class TodoList extends ActionBarActivity {
         };
 
 // How you want the results sorted in the resulting Cursor
-        String sortOrder = FeedEntry.COLUMN_NAME_UPDATED + " DESC";
+        /* String sortOrder = FeedEntry.COLUMN_NAME_UPDATED + " DESC";
 
-        Cursor c = db.query(
-                FeedEntry.TABLE_NAME,  // The table to query
+        Cursor c = mDbHelper.query(
+                FeedEntry.TABLE_NAME,                     // The table to query
                 projection,                               // The columns to return
                 selection,                                // The columns for the WHERE clause
                 selectionArgs,                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 sortOrder                                 // The sort order
-        );
+        ); */
         mDbHelper.close();
     }
 
     @Override
     public void onPause() {
+        super.onPause();
         MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this);
         SQLiteDatabase dbWriter = mDbHelper.getWritableDatabase();
         // Save the TableLayout TODO list
@@ -86,11 +89,6 @@ public class TodoList extends ActionBarActivity {
             tv_temp.setTextColor(Color.BLUE);
             duedate_tl.addView(tv_temp);
 
-            // Comments
-            // tv_temp = new TextView(getApplicationContext());
-            // tv_temp.setText(bundle.getString("comments"));
-            // tl.addView(tv_temp);
-            // tv_temp.setTextColor(Color.BLUE);
         } else {
             TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
             TextView tv_temp = new TextView(getApplicationContext());
@@ -99,6 +97,9 @@ public class TodoList extends ActionBarActivity {
         }
     }
 
+    /**
+     * Interface for the Controller to handle SQLite transactions
+     */
     public class MetricItemDBHelper extends SQLiteOpenHelper {
 
         public static final String DATABASE_NAME = "MetricItem.db";
@@ -125,6 +126,7 @@ public class TodoList extends ActionBarActivity {
 
     /**
      * SQL Database handling for creating tables
+     * Shall only handled by MetricItemDBHelper
      */
     public final class MetricItemDB {
 
@@ -137,7 +139,7 @@ public class TodoList extends ActionBarActivity {
                         MetricItemEntry.COLUMN_NAME_COMMENT + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_DUE_DATE + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + TEXT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_COMPLETED + TEXT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_COMPLETED + TEXT_TYPE +
                 " )";
 
         private static final String SQL_DELETE_ENTRIES =
@@ -148,7 +150,7 @@ public class TodoList extends ActionBarActivity {
         /* Inner class that defines table contents */
         /* This is a fucking waste of time. I can duplicate MetricEntry */
         public abstract class MetricItemEntry implements BaseColumns {
-            public static final String TABLE_NAME = "entry"; // Table name
+            public static final String TABLE_NAME = "entry";                // Table name
             public static final String COLUMN_NAME_ID = "id"; // Processed as an integer
             public static final String COLUMN_NAME_TODO = "todo"; // String that shouldn't be multi-line
             public static final String COLUMN_NAME_COMMENT = "comment"; // Standard multi-line String
