@@ -13,21 +13,25 @@ import android.view.MenuItem;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.view.View;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.io.File;
+import java.util.Iterator;
 
 
 public class TodoList extends ActionBarActivity {
 
     public int ADD_METRIC_REQ_CODE = 1;
+    ArrayList<MetricEntry> metricEntryArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo_list);
         TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
-    }
 
+    }
 
     public void addAMetricToTableLayout(View v) {
         Intent addActivityIntent = new Intent(this, AddMetricActivity.class);
@@ -37,29 +41,49 @@ public class TodoList extends ActionBarActivity {
     @Override
     public void onStart() {
         super.onStart();
-        MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this);
+        MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this); // Creates database
         SQLiteDatabase dbReader = mDbHelper.getReadableDatabase();
+        String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
         // Populate the TableLayout TODO list
         // Define a projection that specifies which columns from the database
         // you will actually use after this query.
-        String[] projection = {
-                MetricItemDB.MetricItemEntry.COLUMN_NAME_ID,
-                MetricItemDB.MetricItemEntry.COLUMN_NAME_TODO,
-                MetricItemDB.MetricItemEntry.COLUMN_NAME_COMMENT,
-        };
 
-// How you want the results sorted in the resulting Cursor
-        /* String sortOrder = FeedEntry.COLUMN_NAME_UPDATED + " DESC";
+        String sortOrder = MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + " DESC";
+        Cursor c = dbReader.rawQuery(query, null);
 
-        Cursor c = mDbHelper.query(
-                FeedEntry.TABLE_NAME,                     // The table to query
-                projection,                               // The columns to return
-                selection,                                // The columns for the WHERE clause
-                selectionArgs,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                sortOrder                                 // The sort order
-        ); */
+        // Okay, we should something to our list.
+        TableLayout taskTableLayout = (TableLayout) findViewById(R.id.table_layout);
+        TableLayout duedateTableLayout = (TableLayout) findViewById(R.id.day_due_table_layout);
+        metricEntryArrayList = new ArrayList();
+
+        // Start filling in the TodoList
+        for (int x=0; x<c.getCount(); x++) {
+            MetricEntry metricEntry = new MetricEntry(
+                    c.getString(1), //ID
+                    c.getString(2), // TODO
+                    c.getInt(3), //COMMENT
+                    c.getInt(4), //DUEDATE
+                    c.getInt(5),
+                    c.getInt(6));
+            // TODO start filling in the TodoList
+            TextView newTask = new TextView(getApplicationContext());
+            newTask.setText(metricEntry.todo);
+            newTask.setTextColor(Color.BLUE);
+            taskTableLayout.addView(newTask);
+
+            // Get due_date
+            TextView newDueDate = new TextView(getApplicationContext());
+            newDueDate.setText((CharSequence) metricEntry.due_date);
+            newDueDate.setTextColor(Color.BLUE);
+            duedateTableLayout.addView(newDueDate);
+
+            Log.i("Metrics", "Added todo:" + metricEntry.todo);
+            Log.i("Metrics", "Added due_date:" + metricEntry.due_date);
+            metricEntryArrayList.add(metricEntry);
+
+            c.moveToNext();
+        }
+
         mDbHelper.close();
     }
 
@@ -68,7 +92,13 @@ public class TodoList extends ActionBarActivity {
         super.onPause();
         MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this);
         SQLiteDatabase dbWriter = mDbHelper.getWritableDatabase();
-        // Save the TableLayout TODO list
+
+        Iterator metricEntryIter = metricEntryArrayList.iterator();
+        dbWriter.execSQL("DROP TABLE IF EXISTS " + );
+        while (metricEntryIter.hasNext()) {
+            dbWriter.execSQL("")
+        }
+
         mDbHelper.close();
     }
 
@@ -131,14 +161,15 @@ public class TodoList extends ActionBarActivity {
     public final class MetricItemDB {
 
         private static final String TEXT_TYPE = " TEXT";
+        private static final String INT_TYPE = " INTEGER PRIMARY KEY";
         private static final String COMMA_SEP = ",";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + MetricItemEntry.TABLE_NAME + " (" +
-                        MetricItemEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY," +
+                        MetricItemEntry.COLUMN_NAME_ID + INT_TYPE + COMMA_SEP+
                         MetricItemEntry.COLUMN_NAME_TODO + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMMENT + TEXT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_DUE_DATE + TEXT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + TEXT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_DUE_DATE + INT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + INT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMPLETED + TEXT_TYPE +
                 " )";
 
