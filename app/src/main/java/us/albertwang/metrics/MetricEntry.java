@@ -5,41 +5,78 @@ import java.text.DateFormat;
 import java.util.Locale;
 
 /**
- * Created by albewang on 3/1/15.
- * Creates a MetricEntry which is the structure for a particular item
- * Used for front-end and for back-end
+ * Store information of a single task as a MetricEntry
  */
 
 public class MetricEntry {
-    public String todo;
-    public String comment;
-    public Calendar due_date;
-    public Calendar completed_date;
+    public String todo; // Headline
+    public String comment; // Description
+    public SuperSimpleDate due_date; // Estimated completion time
+    public SuperSimpleDate completed_date;
     public boolean isCompleted;
-    public int duration;
+    public int duration; // Estimated time needed to finish
 
 
     public MetricEntry() {}
 
     public MetricEntry(String todo, String comment,
-            int due_date, int completed_date,
+            SuperSimpleDate due_date, SuperSimpleDate completed_date,
             int isCompleted, int duration) {
         this.todo = todo;
         this.comment = comment;
-        this.due_date = setCalendarValue(due_date);
-        this.completed_date = setCalendarValue(completed_date);
+        this.due_date = due_date;
+        this.completed_date = completed_date;
         this.isCompleted = isCompleted == 1;
         this.duration = duration;
     }
 
-    private Calendar setCalendarValue(int date) {
-        Calendar cal = Calendar.getInstance();
-        int year = date / 100000000;
-        int month = date / 1000000 % 100;
-        int day = date / 10000 % 100;
-        int hour = date / 100 % 100;
-        int minute = date % 100;
-        cal.set(year, month, day, hour, minute);
-        return cal;
+    // Simple date format
+    public static class SuperSimpleDate {
+        //YYMMDDHHMM
+        int currentDate;
+        public SuperSimpleDate() {
+            currentDate = 0;
+        }
+
+        public SuperSimpleDate(int ssd) {
+            currentDate = ssd;
+        }
+
+        public SuperSimpleDate(int year, int month, int day,
+            int hour, int minute) {
+            currentDate =   minute +
+                    (1<<2) * hour +
+                    (1<<4) * day +
+                    (1<<6) * month +
+                    (1<<8) * year;
+        }
+
+        public int getCurrentDate() {
+            return currentDate;
+        }
+
+        public void setCurrentDate(int newDate) {
+            currentDate = newDate;
+        }
+    }
+
+    public int getDueDate() {
+        return this.due_date.getCurrentDate();
+    }
+
+    public void setDueDate(SuperSimpleDate dueDate) {
+        this.due_date = dueDate;
+    }
+
+    public int getCompletedDate() {
+        return this.completed_date.getCurrentDate();
+    }
+
+    public void setCompletedDate(SuperSimpleDate completedDate) {
+        this.completed_date = completedDate;
+    }
+
+    public int getCompleted() {
+        return this.isCompleted ? 1 : 0;
     }
 }

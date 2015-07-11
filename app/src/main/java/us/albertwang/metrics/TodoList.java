@@ -1,10 +1,12 @@
 package us.albertwang.metrics;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
 import android.database.sqlite.*;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.provider.BaseColumns;
@@ -16,21 +18,77 @@ import android.view.View;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.io.File;
 import java.util.Iterator;
 
 
-public class TodoList extends ActionBarActivity {
+public class TodoList extends Activity {
 
     public int ADD_METRIC_REQ_CODE = 1;
     ArrayList<MetricEntry> metricEntryArrayList;
+    MetricItemDBHelper mDatabaseHelper;
+    SQLiteDatabase mDatabase;
+
+    public String TAG = "Metrix";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_todo_list);
-        TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+        mDatabaseHelper = new MetricItemDBHelper(this); // Creates database
+        mDatabase = mDatabaseHelper.getWritableDatabase();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setContentView(R.layout.activity_todo_list);
+            // TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+
+        } else {
+            setContentView(R.layout.activity_todo_list);
+            TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+            // Okay, we should something to our list.
+            TableLayout taskTableLayout = (TableLayout) findViewById(R.id.table_layout);
+            TableLayout duedateTableLayout = (TableLayout) findViewById(R.id.day_due_table_layout);
+            metricEntryArrayList = new ArrayList<MetricEntry>();
+            loadDatabase(taskTableLayout, duedateTableLayout);
+        }
+    }
+
+    private void loadDatabase(TableLayout taskTableLayout, TableLayout duedateTableLayout) {
+        String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
+
+        String sortOrder = MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + " DESC";
+        Cursor c = mDatabase.rawQuery(query, null);
+
+        // Start filling in the TodoList
+        MetricEntry.SuperSimpleDate ssd = new MetricEntry.SuperSimpleDate();
+        Log.e(TAG, "Current count = " + c.getCount());
+        c.moveToFirst();
+
+        for (int x=0; x<c.getCount(); x++) {
+            MetricEntry metricEntry = new MetricEntry(
+                    c.getString(1), //TODO
+                    c.getString(2), // Comment
+                    new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
+                    new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
+                    c.getInt(5), // isCompleted
+                    c.getInt(6)); // duration
+            TextView newTask = new TextView(getApplicationContext());
+            newTask.setText(metricEntry.todo);
+            newTask.setTextColor(Color.BLUE);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+                taskTableLayout.addView(newTask);
+            }
+
+            // Get due_date
+            TextView newDueDate = new TextView(getApplicationContext());
+            newDueDate.setText(Integer.toString(metricEntry.due_date.getCurrentDate()));
+            newDueDate.setTextColor(Color.BLUE);
+            duedateTableLayout.addView(newDueDate);
+
+            Log.i(TAG, "Added todo:" + metricEntry.todo);
+            Log.i(TAG, "Added due_date:" + metricEntry.due_date);
+            metricEntryArrayList.add(metricEntry);
+
+            c.moveToNext();
+        }
     }
 
     public void addAMetricToTableLayout(View v) {
@@ -39,73 +97,41 @@ public class TodoList extends ActionBarActivity {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this); // Creates database
-        SQLiteDatabase dbReader = mDbHelper.getReadableDatabase();
-        String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
-        // Populate the TableLayout TODO list
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
+    public void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop()");
 
-        String sortOrder = MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + " DESC";
-        Cursor c = dbReader.rawQuery(query, null);
+        // TODO: This is shit code. It's O(n^2)
+        mDatabaseHelper = new MetricItemDBHelper(this); // Creates database
+        mDatabase = mDatabaseHelper.getWritableDatabase();
+        mDatabaseHelper.onUpgrade(mDatabase, 1, 1);
 
-        // Okay, we should something to our list.
-        TableLayout taskTableLayout = (TableLayout) findViewById(R.id.table_layout);
-        TableLayout duedateTableLayout = (TableLayout) findViewById(R.id.day_due_table_layout);
-        metricEntryArrayList = new ArrayList();
-
-        // Start filling in the TodoList
-        for (int x=0; x<c.getCount(); x++) {
-            MetricEntry metricEntry = new MetricEntry(
-                    c.getString(1), //ID
-                    c.getString(2), // TODO
-                    c.getInt(3), //COMMENT
-                    c.getInt(4), //DUEDATE
-                    c.getInt(5),
-                    c.getInt(6));
-            // TODO start filling in the TodoList
-            TextView newTask = new TextView(getApplicationContext());
-            newTask.setText(metricEntry.todo);
-            newTask.setTextColor(Color.BLUE);
-            taskTableLayout.addView(newTask);
-
-            // Get due_date
-            TextView newDueDate = new TextView(getApplicationContext());
-            newDueDate.setText((CharSequence) metricEntry.due_date);
-            newDueDate.setTextColor(Color.BLUE);
-            duedateTableLayout.addView(newDueDate);
-
-            Log.i("Metrics", "Added todo:" + metricEntry.todo);
-            Log.i("Metrics", "Added due_date:" + metricEntry.due_date);
-            metricEntryArrayList.add(metricEntry);
-
-            c.moveToNext();
-        }
-
-        mDbHelper.close();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        MetricItemDBHelper mDbHelper = new MetricItemDBHelper(this);
-        SQLiteDatabase dbWriter = mDbHelper.getWritableDatabase();
-
+        // Drop the table. Re-create. Fill.
         Iterator metricEntryIter = metricEntryArrayList.iterator();
-        dbWriter.execSQL("DROP TABLE IF EXISTS " + );
+        Log.e(TAG, "Size of metricEntryArrayList " + metricEntryArrayList.size());
+        // mDatabase.execSQL("DROP TABLE IF EXISTS " + MetricItemDBHelper.DATABASE_NAME);
+
         while (metricEntryIter.hasNext()) {
-            dbWriter.execSQL("")
+            MetricEntry metricEntry = (MetricEntry) metricEntryIter.next();
+            mDatabaseHelper.addMetricEntry(mDatabase, metricEntry.todo,
+                    metricEntry.comment, metricEntry.getDueDate(), metricEntry.getCompletedDate(),
+                    metricEntry.getCompleted(), metricEntry.duration);
         }
 
-        mDbHelper.close();
+        Log.i("Metrics", "onStop() - Closing mDatabaseHelper");
+        mDatabaseHelper.debugDatabase(mDatabase);
+        mDatabaseHelper.close();
+
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
+            Log.d(TAG, "Got a result from adding an object");
             // Okay, we should something to our list.
             TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+            if (!data.hasExtra("task")) {
+                return;
+            }
             Bundle bundle = (Bundle) data.getExtras();
             TextView tv_temp = new TextView(getApplicationContext());
             tv_temp.setText(bundle.getString("task"));
@@ -119,7 +145,19 @@ public class TodoList extends ActionBarActivity {
             tv_temp.setTextColor(Color.BLUE);
             duedate_tl.addView(tv_temp);
 
+            MetricEntry metricEntry = new MetricEntry(bundle.getString("task"),
+                    bundle.getString("comments"),
+                    new MetricEntry.SuperSimpleDate(1234567890),
+                    new MetricEntry.SuperSimpleDate(0),
+                    4,
+                    10020);
+
+            metricEntryArrayList.add(metricEntry);
+
+            Log.d(TAG, "New MetricActivity size = " + metricEntryArrayList.size());
+
         } else {
+            Log.d(TAG, "Added new metric through alternative path");
             TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
             TextView tv_temp = new TextView(getApplicationContext());
             tv_temp.setText("Added a metric 2");
@@ -152,6 +190,47 @@ public class TodoList extends ActionBarActivity {
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             onUpgrade(db, oldVersion, newVersion);
         }
+
+        public void addMetricEntry(SQLiteDatabase db, String todo, String comment,
+            int due_date, int completed_time, int completed, int duration) {
+            db.execSQL("INSERT INTO " + MetricItemDB.MetricItemEntry.TABLE_NAME + " (" +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_TODO + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_COMMENT + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_DUE_DATE + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_COMPLETED + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_DURATION + ")" +
+
+                    " VALUES (" +
+                    "null" + MetricItemDB.COMMA_SEP +
+                    "\"" + todo + "\"" + MetricItemDB.COMMA_SEP +
+                    "\"" + comment + "\""+ MetricItemDB.COMMA_SEP +
+                    due_date + MetricItemDB.COMMA_SEP +
+                    completed_time + MetricItemDB.COMMA_SEP +
+                    completed + MetricItemDB.COMMA_SEP +
+                    duration + ");");
+        }
+
+        public void debugDatabase(SQLiteDatabase db) {
+            String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
+            Cursor c = db.rawQuery(query, null);
+            Log.e(TAG, "Cursor count = " + c.getCount());
+            c.moveToFirst();
+
+            for (int x=0; x<c.getCount(); x++) {
+                Log.e(TAG, c.getString(1) +
+                        c.getString(2) +
+                        new MetricEntry.SuperSimpleDate(c.getInt(3)) +
+                        new MetricEntry.SuperSimpleDate(c.getInt(4)) +
+                        c.getInt(5) +
+                        c.getInt(6)); // duration
+
+                c.moveToNext();
+            }
+
+            c.close();
+        }
     }
 
     /**
@@ -161,17 +240,19 @@ public class TodoList extends ActionBarActivity {
     public final class MetricItemDB {
 
         private static final String TEXT_TYPE = " TEXT";
-        private static final String INT_TYPE = " INTEGER PRIMARY KEY";
+        private static final String PRIMARY_TYPE = " INTEGER PRIMARY KEY";
+        private static final String INT_TYPE = " INTEGER KEY";
         private static final String COMMA_SEP = ",";
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + MetricItemEntry.TABLE_NAME + " (" +
-                        MetricItemEntry.COLUMN_NAME_ID + INT_TYPE + COMMA_SEP+
+                        MetricItemEntry.COLUMN_NAME_ID + PRIMARY_TYPE + COMMA_SEP+
                         MetricItemEntry.COLUMN_NAME_TODO + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMMENT + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_DUE_DATE + INT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + INT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_COMPLETED + TEXT_TYPE +
-                " )";
+                        MetricItemEntry.COLUMN_NAME_COMPLETED + INT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_DURATION + INT_TYPE +
+                ")";
 
         private static final String SQL_DELETE_ENTRIES =
                 "DROP TABLE IF EXISTS " + MetricItemEntry.TABLE_NAME;
@@ -179,15 +260,15 @@ public class TodoList extends ActionBarActivity {
         public void MetricItem(){}
 
         /* Inner class that defines table contents */
-        /* This is a fucking waste of time. I can duplicate MetricEntry */
         public abstract class MetricItemEntry implements BaseColumns {
-            public static final String TABLE_NAME = "entry";                // Table name
+            public static final String TABLE_NAME = "entry"; // Table name
             public static final String COLUMN_NAME_ID = "id"; // Processed as an integer
             public static final String COLUMN_NAME_TODO = "todo"; // String that shouldn't be multi-line
             public static final String COLUMN_NAME_COMMENT = "comment"; // Standard multi-line String
             public static final String COLUMN_NAME_DUE_DATE = "due_date"; // handled like a calendar date
             public static final String COLUMN_NAME_COMPLETED_TIME = "completed_date"; // handled like a calendar date/time
-            public static final String COLUMN_NAME_COMPLETED = "completed"; // handled like a boolean
+            public static final String COLUMN_NAME_COMPLETED = "Completed"; // handled like a boolean
+            public static final String COLUMN_NAME_DURATION = "Duration"; // How long it will take in minutes
         }
     }
 
