@@ -7,11 +7,14 @@ import android.database.sqlite.*;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.view.View;
@@ -19,6 +22,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 
 public class TodoList extends Activity {
@@ -27,6 +31,9 @@ public class TodoList extends Activity {
     ArrayList<MetricEntry> metricEntryArrayList;
     MetricItemDBHelper mDatabaseHelper;
     SQLiteDatabase mDatabase;
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
 
     public String TAG = "Metrix";
 
@@ -35,10 +42,21 @@ public class TodoList extends Activity {
         super.onCreate(savedInstanceState);
         mDatabaseHelper = new MetricItemDBHelper(this); // Creates database
         mDatabase = mDatabaseHelper.getWritableDatabase();
+        if (metricEntryArrayList == null)
+            metricEntryArrayList = new ArrayList<MetricEntry>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setContentView(R.layout.activity_todo_list);
-            // TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+            mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+            mRecyclerView.setHasFixedSize(true);
+
+            mLayoutManager = new LinearLayoutManager(this);
+            mRecyclerView.setLayoutManager(mLayoutManager);
+
+            // specify an adapter (see also next example)
+            loadDatabase();
+            mAdapter = new MyAdapter();
+            mRecyclerView.setAdapter(mAdapter);
 
         } else {
             setContentView(R.layout.activity_todo_list);
@@ -48,6 +66,31 @@ public class TodoList extends Activity {
             TableLayout duedateTableLayout = (TableLayout) findViewById(R.id.day_due_table_layout);
             metricEntryArrayList = new ArrayList<MetricEntry>();
             loadDatabase(taskTableLayout, duedateTableLayout);
+        }
+    }
+
+    private void loadDatabase() {
+        String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
+
+        String sortOrder = MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + " DESC";
+        Cursor c = mDatabase.rawQuery(query, null);
+
+        // Start filling in the TodoList
+        MetricEntry.SuperSimpleDate ssd = new MetricEntry.SuperSimpleDate();
+        Log.e(TAG, "Current count = " + c.getCount());
+        c.moveToFirst();
+
+        for (int x=0; x<c.getCount(); x++) {
+            MetricEntry metricEntry = new MetricEntry(
+                    c.getString(1), //TODO
+                    c.getString(2), // Comment
+                    new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
+                    new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
+                    c.getInt(5), // isCompleted
+                    c.getInt(6)); // duration
+
+            metricEntryArrayList.add(metricEntry);
+            c.moveToNext();
         }
     }
 
@@ -127,32 +170,38 @@ public class TodoList extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             Log.d(TAG, "Got a result from adding an object");
-            // Okay, we should something to our list.
-            TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+
             if (!data.hasExtra("task")) {
                 return;
             }
             Bundle bundle = (Bundle) data.getExtras();
-            TextView tv_temp = new TextView(getApplicationContext());
-            tv_temp.setText(bundle.getString("task"));
-            tv_temp.setTextColor(Color.BLUE);
-            tl.addView(tv_temp);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                // Okay, we should something to our list.
+                TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
+                TextView tv_temp = new TextView(getApplicationContext());
+                tv_temp.setText(bundle.getString("task"));
+                tv_temp.setTextColor(Color.BLUE);
+                tl.addView(tv_temp);
 
-            // Get due_date
-            TableLayout duedate_tl = (TableLayout) findViewById(R.id.day_due_table_layout);
-            tv_temp = new TextView(getApplicationContext());
-            tv_temp.setText(bundle.getString("duedate"));
-            tv_temp.setTextColor(Color.BLUE);
-            duedate_tl.addView(tv_temp);
-
+                // Get due_date
+                TableLayout duedate_tl = (TableLayout) findViewById(R.id.day_due_table_layout);
+                tv_temp = new TextView(getApplicationContext());
+                tv_temp.setText(bundle.getString("duedate"));
+                tv_temp.setTextColor(Color.BLUE);
+                duedate_tl.addView(tv_temp);
+            }
             MetricEntry metricEntry = new MetricEntry(bundle.getString("task"),
-                    bundle.getString("comments"),
-                    new MetricEntry.SuperSimpleDate(1234567890),
-                    new MetricEntry.SuperSimpleDate(0),
-                    4,
-                    10020);
+                        bundle.getString("comments"),
+                        new MetricEntry.SuperSimpleDate(1234567890),
+                        new MetricEntry.SuperSimpleDate(0),
+                        4,
+                        10020);
 
             metricEntryArrayList.add(metricEntry);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mAdapter.notifyDataSetChanged();
+            }
 
             Log.d(TAG, "New MetricActivity size = " + metricEntryArrayList.size());
 
@@ -162,6 +211,69 @@ public class TodoList extends Activity {
             TextView tv_temp = new TextView(getApplicationContext());
             tv_temp.setText("Added a metric 2");
             tl.addView(tv_temp);
+        }
+    }
+
+
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+        private ViewHolder mViewHolder;
+
+        // Provide a reference to the views for each data item
+        // Complex data items may need more than one view per item, and
+        // you provide access to all the views for a data item in a view holder
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            // each data item is just a string in this case
+            public TextView mTextViewTask;
+            public TextView mTextViewComment;
+            public TextView mTextViewCountdown;
+            public TextView mTextViewDate;
+            public ViewHolder(View v) {
+                super(v);
+                Log.d(TAG, "Called super from ViewHolder constructor for layout");
+                mTextViewTask = (TextView) v.findViewById(R.id.topleft_todo_row);
+                mTextViewDate = (TextView) v.findViewById(R.id.topright_todo_row);
+                mTextViewComment = (TextView) v.findViewById(R.id.bottomleft_todo_row);
+                mTextViewCountdown = (TextView) v.findViewById(R.id.bottomright_todo_row);
+            }
+        }
+
+        // Provide a suitable constructor (depends on the kind of dataset)
+        public MyAdapter() {}
+
+        // Create new views (invoked by the layout manager)
+        @Override
+        public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+            View todo_view = LayoutInflater.from(parent.getContext()).inflate(R.layout.todolist_entry, parent, false);
+
+            // set the view's size, margins, paddings and layout parameters
+            // mViewHolder = new ViewHolder(todo_view, due_view, comment_view, duration_view);
+            mViewHolder = new ViewHolder(todo_view);
+            Log.d(TAG, "Finished onCreate");
+            return mViewHolder;
+        }
+
+        // Replace the contents of a view (invoked by the layout manager)
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            // - get element from your dataset at this position
+            // - replace the contents of the view with that element
+
+            MetricEntry metricEntry = metricEntryArrayList.get(position);
+
+            holder.mTextViewTask.setText(metricEntry.todo);
+            holder.mTextViewComment.setText(metricEntry.comment);
+            Log.d(TAG, "Duration is " + metricEntry.duration);
+            holder.mTextViewCountdown.setText(Integer.toString(metricEntry.duration));
+            holder.mTextViewDate.setText(Integer.toString(metricEntry.getDueDate()));
+        }
+
+        // Return the size of your dataset (invoked by the layout manager)
+        // Theory: LayoutManager uses this value to determine how many times onBindViewHolder
+        // gets called
+        @Override
+        public int getItemCount() {
+            return metricEntryArrayList.size();
         }
     }
 

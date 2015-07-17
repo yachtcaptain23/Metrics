@@ -1,6 +1,7 @@
 package us.albertwang.metrics;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -21,7 +22,7 @@ import android.widget.TimePicker;
 
 import java.util.Calendar;
 
-public class AddMetricActivity extends ActionBarActivity {
+public class AddMetricActivity extends Activity {
 
     public int year, month, day, hour, minute;
     public static String dateDue = "";
@@ -31,7 +32,6 @@ public class AddMetricActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_metric);
-
     }
 
     public void saveSettings(View v) {
