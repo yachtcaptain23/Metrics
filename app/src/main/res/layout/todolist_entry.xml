@@ -12,6 +12,7 @@
             android:text="hello"
             android:gravity="start"
             android:layout_weight="1"
+            android:background="@color/material_deep_teal_500"
             android:id="@+id/topleft_todo_row" />
 
         <TextView
@@ -20,6 +21,7 @@
             android:paddingTop="5dp"
             android:text="bye"
             android:layout_weight="1"
+            android:background="@color/material_deep_teal_500"
             android:id="@+id/topright_todo_row" />
     </TableRow>
 
@@ -27,12 +29,14 @@
         <TextView
             android:text="comment"
             android:gravity="center_horizontal"
+            android:background="@color/material_deep_teal_500"
             android:layout_weight="1"
             android:id="@+id/bottomleft_todo_row" />
 
         <TextView
             android:gravity="end"
             android:text="duration"
+            android:background="@color/material_deep_teal_500"
             android:layout_weight="1"
             android:id="@+id/bottomright_todo_row"
             />

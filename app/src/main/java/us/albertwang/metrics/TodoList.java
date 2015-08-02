@@ -1,5 +1,6 @@
 package us.albertwang.metrics;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -27,13 +29,15 @@ import java.util.Random;
 
 public class TodoList extends Activity {
 
-    public int ADD_METRIC_REQ_CODE = 1;
+    public int ADD_METRIC_REQUEST_CODE = 1;
+    private final int EDIT_REQUEST_CODE = 2;
     ArrayList<MetricEntry> metricEntryArrayList;
     MetricItemDBHelper mDatabaseHelper;
     SQLiteDatabase mDatabase;
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+
 
     public String TAG = "Metrix";
 
@@ -67,8 +71,20 @@ public class TodoList extends Activity {
             metricEntryArrayList = new ArrayList<MetricEntry>();
             loadDatabase(taskTableLayout, duedateTableLayout);
         }
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+        // Remember that you should never show the action bar if the
+        // status bar is hidden, so hide that too if necessary.
+        ActionBar actionBar = getActionBar();
+        actionBar.hide();
     }
 
+    /**
+     * Lollipop and newer as it integrates with RecyclerView
+     */
     private void loadDatabase() {
         String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
 
@@ -126,8 +142,6 @@ public class TodoList extends Activity {
             newDueDate.setTextColor(Color.BLUE);
             duedateTableLayout.addView(newDueDate);
 
-            Log.i(TAG, "Added todo:" + metricEntry.todo);
-            Log.i(TAG, "Added due_date:" + metricEntry.due_date);
             metricEntryArrayList.add(metricEntry);
 
             c.moveToNext();
@@ -136,7 +150,7 @@ public class TodoList extends Activity {
 
     public void addAMetricToTableLayout(View v) {
         Intent addActivityIntent = new Intent(this, AddMetricActivity.class);
-        startActivityForResult(addActivityIntent, ADD_METRIC_REQ_CODE);
+        startActivityForResult(addActivityIntent, ADD_METRIC_REQUEST_CODE);
     }
 
     @Override
@@ -169,8 +183,6 @@ public class TodoList extends Activity {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
-            Log.d(TAG, "Got a result from adding an object");
-
             if (!data.hasExtra("task")) {
                 return;
             }
@@ -205,8 +217,9 @@ public class TodoList extends Activity {
 
             Log.d(TAG, "New MetricActivity size = " + metricEntryArrayList.size());
 
+        } else if (requestCode == EDIT_REQUEST_CODE ) {
+            Log.i(TAG, "Done editing !");
         } else {
-            Log.d(TAG, "Added new metric through alternative path");
             TableLayout tl = (TableLayout) findViewById(R.id.table_layout);
             TextView tv_temp = new TextView(getApplicationContext());
             tv_temp.setText("Added a metric 2");
@@ -217,6 +230,9 @@ public class TodoList extends Activity {
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private ViewHolder mViewHolder;
+        private float downXPointer = 0;
+        private final int SWIPE_DELTA = 100;
+        private final int CLICK_DELTA = 50;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -259,14 +275,54 @@ public class TodoList extends Activity {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
 
-            MetricEntry metricEntry = metricEntryArrayList.get(position);
-
+            final MetricEntry metricEntry = metricEntryArrayList.get(position);
             holder.mTextViewTask.setText(metricEntry.todo);
             holder.mTextViewComment.setText(metricEntry.comment);
-            Log.d(TAG, "Duration is " + metricEntry.duration);
             holder.mTextViewCountdown.setText(Integer.toString(metricEntry.duration));
             holder.mTextViewDate.setText(Integer.toString(metricEntry.getDueDate()));
+            // Todo: Change color based on duration left
+            final int thisPos = holder.getLayoutPosition();
+
+            holder.itemView.setOnTouchListener(new View.OnTouchListener() {
+                public boolean onTouch(View v, MotionEvent ev) {
+                    switch (ev.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            Log.i(TAG, "Down");
+                            downXPointer = ev.getX(0);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            Log.i(TAG, "Up");
+                            if (ev.getX(0) >= (downXPointer + SWIPE_DELTA)) {
+                                // Swipe to the right
+                                // TODO complete
+                            } else if (ev.getX(0) <= (downXPointer + CLICK_DELTA) &&
+                                    ev.getX(0) >= (downXPointer - CLICK_DELTA)) {
+                                // Edit
+                                Bundle bundle = new Bundle();
+                                bundle.putString("todo", metricEntry.todo);
+                                bundle.putString("comment", metricEntry.comment);
+                                bundle.putInt("duration", metricEntry.duration);
+                                bundle.putInt("duedate", metricEntry.getDueDate());
+
+                                Intent addActivityIntent = new Intent(getApplicationContext(), AddMetricActivity.class);
+                                addActivityIntent.putExtras(bundle);
+
+                                startActivityForResult(addActivityIntent, EDIT_REQUEST_CODE);
+                            } else if (ev.getX(0) <= (downXPointer - SWIPE_DELTA)) {
+                                // Swipe to the left
+                                // TODO delte
+                            }
+                            break;
+                        default:
+                            Log.i(TAG, "Booop");
+                            break;
+                    }
+                    return true;
+                }
+            });
         }
+
+
 
         // Return the size of your dataset (invoked by the layout manager)
         // Theory: LayoutManager uses this value to determine how many times onBindViewHolder

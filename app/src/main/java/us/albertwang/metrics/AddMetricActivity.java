@@ -32,6 +32,11 @@ public class AddMetricActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_metric);
+
+        Bundle b = getIntent().getExtras();
+        if (b != null && b.containsKey("todo")) {
+            Log.i(TAG, b.getString("todo"));
+        }
     }
 
     public void saveSettings(View v) {
@@ -47,19 +52,9 @@ public class AddMetricActivity extends Activity {
         finish();
     }
 
-    /*
-    public void onResume(View v) {
-
-        Button thisButton = (Button) findViewById(R.id.dueDatePicker);
-        thisButton.setText(year + "/" + month + "/" + day);
-    }
-
-    */
-
     public void showDueDatePickerDialog(View v) {
         DialogFragment newFragment = new DatePickerFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-
         newFragment.show(ft, "dueDatePickerDialog");
     }
 
@@ -67,7 +62,6 @@ public class AddMetricActivity extends Activity {
     public void showTimePickerDialog(View v) {
         DialogFragment newFragment = new TimePickerFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-
         newFragment.show(ft, "timePickerDialog");
     }
 
