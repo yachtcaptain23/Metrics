@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="75dp"
     android:stretchColumns="1"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -25,7 +25,8 @@
             android:id="@+id/topright_todo_row" />
     </TableRow>
 
-    <TableRow>
+    <TableRow
+        android:layout_marginBottom="@dimen/metrix_default_margin">
         <TextView
             android:text="comment"
             android:gravity="center_horizontal"
