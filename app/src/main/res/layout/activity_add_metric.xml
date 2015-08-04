@@ -22,9 +22,8 @@
         android:id="@+id/editText"
         android:enabled="true"
         android:editable="true"
-        android:hint="Change this task!"
+        android:hint="Task"
         android:layout_alignParentStart="true"
-        android:text="Task"
         android:layout_alignParentEnd="true" />
 
     <Button
@@ -42,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/editText3"
-        android:hint="Add a comment!"
+        android:hint="Comments"
         android:layout_below="@id/dueDatePicker"
         android:layout_alignParentStart="true"
         android:layout_alignEnd="@id/editText" />

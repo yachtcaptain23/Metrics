@@ -23,6 +23,7 @@ import android.view.View;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -31,7 +32,8 @@ public class TodoList extends Activity {
 
     public int ADD_METRIC_REQUEST_CODE = 1;
     private final int EDIT_REQUEST_CODE = 2;
-    ArrayList<MetricEntry> metricEntryArrayList;
+    ArrayList<MetricEntry> mMetricEntryArrayList;
+    ArrayList<MetricEntry> mCompletedMetrics;
     MetricItemDBHelper mDatabaseHelper;
     SQLiteDatabase mDatabase;
     private RecyclerView mRecyclerView;
@@ -46,8 +48,11 @@ public class TodoList extends Activity {
         super.onCreate(savedInstanceState);
         mDatabaseHelper = new MetricItemDBHelper(this); // Creates database
         mDatabase = mDatabaseHelper.getWritableDatabase();
-        if (metricEntryArrayList == null)
-            metricEntryArrayList = new ArrayList<MetricEntry>();
+        if (mMetricEntryArrayList == null)
+            mMetricEntryArrayList = new ArrayList<MetricEntry>();
+        if (mCompletedMetrics == null)
+            mCompletedMetrics = new ArrayList<MetricEntry>();
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setContentView(R.layout.activity_todo_list);
@@ -68,7 +73,7 @@ public class TodoList extends Activity {
             // Okay, we should something to our list.
             TableLayout taskTableLayout = (TableLayout) findViewById(R.id.table_layout);
             TableLayout duedateTableLayout = (TableLayout) findViewById(R.id.day_due_table_layout);
-            metricEntryArrayList = new ArrayList<MetricEntry>();
+            mMetricEntryArrayList = new ArrayList<MetricEntry>();
             loadDatabase(taskTableLayout, duedateTableLayout);
         }
 
@@ -105,7 +110,7 @@ public class TodoList extends Activity {
                     c.getInt(5), // isCompleted
                     c.getInt(6)); // duration
 
-            metricEntryArrayList.add(metricEntry);
+            mMetricEntryArrayList.add(metricEntry);
             c.moveToNext();
         }
     }
@@ -142,7 +147,7 @@ public class TodoList extends Activity {
             newDueDate.setTextColor(Color.BLUE);
             duedateTableLayout.addView(newDueDate);
 
-            metricEntryArrayList.add(metricEntry);
+            mMetricEntryArrayList.add(metricEntry);
 
             c.moveToNext();
         }
@@ -164,8 +169,8 @@ public class TodoList extends Activity {
         mDatabaseHelper.onUpgrade(mDatabase, 1, 1);
 
         // Drop the table. Re-create. Fill.
-        Iterator metricEntryIter = metricEntryArrayList.iterator();
-        Log.e(TAG, "Size of metricEntryArrayList " + metricEntryArrayList.size());
+        Iterator metricEntryIter = mMetricEntryArrayList.iterator();
+        Log.e(TAG, "Size of metricEntryArrayList " + mMetricEntryArrayList.size());
         // mDatabase.execSQL("DROP TABLE IF EXISTS " + MetricItemDBHelper.DATABASE_NAME);
 
         while (metricEntryIter.hasNext()) {
@@ -209,13 +214,11 @@ public class TodoList extends Activity {
                         4,
                         10020);
 
-            metricEntryArrayList.add(metricEntry);
+            mMetricEntryArrayList.add(metricEntry);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mAdapter.notifyDataSetChanged();
             }
-
-            Log.d(TAG, "New MetricActivity size = " + metricEntryArrayList.size());
 
         } else if (requestCode == EDIT_REQUEST_CODE ) {
             Log.i(TAG, "Done editing !");
@@ -275,7 +278,7 @@ public class TodoList extends Activity {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
 
-            final MetricEntry metricEntry = metricEntryArrayList.get(position);
+            final MetricEntry metricEntry = mMetricEntryArrayList.get(position);
             holder.mTextViewTask.setText(metricEntry.todo);
             holder.mTextViewComment.setText(metricEntry.comment);
             holder.mTextViewCountdown.setText(Integer.toString(metricEntry.duration));
@@ -294,7 +297,17 @@ public class TodoList extends Activity {
                             Log.i(TAG, "Up");
                             if (ev.getX(0) >= (downXPointer + SWIPE_DELTA)) {
                                 // Swipe to the right
-                                // TODO complete
+                                Calendar c = Calendar.getInstance();
+                                metricEntry.setCompletedDate(new MetricEntry.SuperSimpleDate(
+                                                c.get(Calendar.YEAR),
+                                                c.get(Calendar.MONTH),
+                                                c.get(Calendar.DAY_OF_MONTH),
+                                                c.get(Calendar.HOUR),
+                                                c.get(Calendar.MINUTE)));
+                                metricEntry.setCompleted(true);
+                                mCompletedMetrics.add(metricEntry);
+                                mMetricEntryArrayList.remove(thisPos);
+                                mAdapter.notifyDataSetChanged();
                             } else if (ev.getX(0) <= (downXPointer + CLICK_DELTA) &&
                                     ev.getX(0) >= (downXPointer - CLICK_DELTA)) {
                                 // Edit
@@ -303,6 +316,7 @@ public class TodoList extends Activity {
                                 bundle.putString("comment", metricEntry.comment);
                                 bundle.putInt("duration", metricEntry.duration);
                                 bundle.putInt("duedate", metricEntry.getDueDate());
+                                bundle.putInt("position", thisPos);
 
                                 Intent addActivityIntent = new Intent(getApplicationContext(), AddMetricActivity.class);
                                 addActivityIntent.putExtras(bundle);
@@ -310,7 +324,7 @@ public class TodoList extends Activity {
                                 startActivityForResult(addActivityIntent, EDIT_REQUEST_CODE);
                             } else if (ev.getX(0) <= (downXPointer - SWIPE_DELTA)) {
                                 // Swipe to the left
-                                // TODO delte
+
                             }
                             break;
                         default:
@@ -329,7 +343,7 @@ public class TodoList extends Activity {
         // gets called
         @Override
         public int getItemCount() {
-            return metricEntryArrayList.size();
+            return mMetricEntryArrayList.size();
         }
     }
 

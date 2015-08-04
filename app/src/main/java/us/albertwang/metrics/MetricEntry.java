@@ -76,6 +76,14 @@ public class MetricEntry {
         this.completed_date = completedDate;
     }
 
+    public void setCompleted(boolean c) {
+        this.isCompleted = c;
+    }
+
+    /**
+     * Used for storing completion information in the SQL db.
+     * @return
+     */
     public int getCompleted() {
         return this.isCompleted ? 1 : 0;
     }
