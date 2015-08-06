@@ -25,7 +25,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
-import java.util.Random;
 
 
 public class TodoList extends Activity {
@@ -187,6 +186,7 @@ public class TodoList extends Activity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null) return;
         if (requestCode == 1) {
             if (!data.hasExtra("task")) {
                 return;
@@ -324,11 +324,11 @@ public class TodoList extends Activity {
                                 startActivityForResult(addActivityIntent, EDIT_REQUEST_CODE);
                             } else if (ev.getX(0) <= (downXPointer - SWIPE_DELTA)) {
                                 // Swipe to the left
-
+                                mMetricEntryArrayList.remove(thisPos);
+                                mAdapter.notifyDataSetChanged();
                             }
                             break;
                         default:
-                            Log.i(TAG, "Booop");
                             break;
                     }
                     return true;

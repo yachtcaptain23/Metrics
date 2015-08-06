@@ -2,39 +2,39 @@
 <items version="2" >
 
     <item
-        jar="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.0/classes.jar"
+        jar="/Users/albewang/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/22.0.0/support-annotations-22.0.0.jar"
         jumboMode="false"
         revision="21.1.2"
-        sha1="1ee588ff2c4daf7b97c1cbf922a6c7f027285c2f">
-        <dex dex="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/pre-dexed/debug/classes-40f0bb3e9740012353636321592f986805e77b11.jar" />
+        sha1="685d0b2c590447e85284ed84712cb363ba04eff8">
+        <dex dex="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/pre-dexed/debug/support-annotations-22.0.0-329708a37352bb6306cde90ca9d56cd612382ad0.jar" />
     </item>
     <item
-        jar="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/22.2.0/classes.jar"
+        jar="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/classes.jar"
         jumboMode="false"
         revision="21.1.2"
-        sha1="5b37cf49773f7f17aca9830efd3053b0cac56728">
-        <dex dex="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/pre-dexed/debug/classes-2c0215ebffde675a052900ce303b1142cad0b04d.jar" />
+        sha1="4e86306289ace4aa0cfec44a05ed2b410d36989d">
+        <dex dex="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/pre-dexed/debug/classes-d6eda8f69b0c5b177dedc811de10623a6962081b.jar" />
     </item>
     <item
-        jar="/Users/albertwang/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/22.2.0/support-annotations-22.2.0.jar"
+        jar="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.0.0/libs/internal_impl-22.0.0.jar"
         jumboMode="false"
         revision="21.1.2"
-        sha1="66b42a1f3eb7676070b7ef7f14b603483aecbee1">
-        <dex dex="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/pre-dexed/debug/support-annotations-22.2.0-c0582f36b53fcfed0ac5cd93da00e42182a98949.jar" />
+        sha1="b5b92f469d515a13d778900f6d50c03d12f35504">
+        <dex dex="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/pre-dexed/debug/internal_impl-22.0.0-9029f3d002424a525ea5d4477eec5a66fa03b5d5.jar" />
     </item>
     <item
-        jar="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.3/classes.jar"
+        jar="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.3/classes.jar"
         jumboMode="false"
         revision="21.1.2"
         sha1="81d42bf983a8741f4888a6e333e454e4a5e0eeb7">
-        <dex dex="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/pre-dexed/debug/classes-967981063774da183716d6d02c75df1cd6a448c6.jar" />
+        <dex dex="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/pre-dexed/debug/classes-87449f5b280a699a1bf96a4cd12a4290d4e9fc76.jar" />
     </item>
     <item
-        jar="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.0/libs/internal_impl-22.2.0.jar"
+        jar="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/22.0.0/classes.jar"
         jumboMode="false"
         revision="21.1.2"
-        sha1="57f2ab85c164ff1676ec64dee787981c046fab79">
-        <dex dex="/Users/albertwang/AndroidStudioProjects/Metrics/app/build/intermediates/pre-dexed/debug/internal_impl-22.2.0-b660db6faf2ebd10e0c585c65d628417b20c45b3.jar" />
+        sha1="c6d79137693d494dee16372d3921f919eb724ced">
+        <dex dex="/Users/albewang/AndroidStudioProjects/github.com/Metrics/app/build/intermediates/pre-dexed/debug/classes-d6ec71164da2be7a52d45c790a4a5e4c30f1a27f.jar" />
     </item>
 
 </items>
