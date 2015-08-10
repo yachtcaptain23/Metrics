@@ -107,7 +107,7 @@ public class TodoList extends Activity {
                     new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
                     new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
                     c.getInt(5), // isCompleted
-                    c.getInt(6)); // duration
+                    c.getInt(6)); // estimatedCompletionTime
 
             mMetricEntryArrayList.add(metricEntry);
             c.moveToNext();
@@ -132,7 +132,7 @@ public class TodoList extends Activity {
                     new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
                     new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
                     c.getInt(5), // isCompleted
-                    c.getInt(6)); // duration
+                    c.getInt(6)); // estimatedCompletionTime
             TextView newTask = new TextView(getApplicationContext());
             newTask.setText(metricEntry.todo);
             newTask.setTextColor(Color.BLUE);
@@ -176,7 +176,7 @@ public class TodoList extends Activity {
             MetricEntry metricEntry = (MetricEntry) metricEntryIter.next();
             mDatabaseHelper.addMetricEntry(mDatabase, metricEntry.todo,
                     metricEntry.comment, metricEntry.getDueDate(), metricEntry.getCompletedDate(),
-                    metricEntry.getCompleted(), metricEntry.duration);
+                    metricEntry.getCompleted(), metricEntry.estimatedCompletionTime);
         }
 
         Log.i("Metrics", "onStop() - Closing mDatabaseHelper");
@@ -266,7 +266,7 @@ public class TodoList extends Activity {
             View todo_view = LayoutInflater.from(parent.getContext()).inflate(R.layout.todolist_entry, parent, false);
 
             // set the view's size, margins, paddings and layout parameters
-            // mViewHolder = new ViewHolder(todo_view, due_view, comment_view, duration_view);
+            // mViewHolder = new ViewHolder(todo_view, due_view, comment_view, estimatedCompletionTime_view);
             mViewHolder = new ViewHolder(todo_view);
             Log.d(TAG, "Finished onCreate");
             return mViewHolder;
@@ -281,9 +281,9 @@ public class TodoList extends Activity {
             final MetricEntry metricEntry = mMetricEntryArrayList.get(position);
             holder.mTextViewTask.setText(metricEntry.todo);
             holder.mTextViewComment.setText(metricEntry.comment);
-            holder.mTextViewCountdown.setText(Integer.toString(metricEntry.duration));
+            holder.mTextViewCountdown.setText(Integer.toString(metricEntry.estimatedCompletionTime));
             holder.mTextViewDate.setText(Integer.toString(metricEntry.getDueDate()));
-            // Todo: Change color based on duration left
+            // Todo: Change color based on estimatedCompletionTime left
             final int thisPos = holder.getLayoutPosition();
 
             holder.itemView.setOnTouchListener(new View.OnTouchListener() {
@@ -314,7 +314,7 @@ public class TodoList extends Activity {
                                 Bundle bundle = new Bundle();
                                 bundle.putString("todo", metricEntry.todo);
                                 bundle.putString("comment", metricEntry.comment);
-                                bundle.putInt("duration", metricEntry.duration);
+                                bundle.putInt("estimatedCompletionTime", metricEntry.estimatedCompletionTime);
                                 bundle.putInt("duedate", metricEntry.getDueDate());
                                 bundle.putInt("position", thisPos);
 
@@ -374,7 +374,7 @@ public class TodoList extends Activity {
         }
 
         public void addMetricEntry(SQLiteDatabase db, String todo, String comment,
-            int due_date, int completed_time, int completed, int duration) {
+            int due_date, int completed_time, int completed, int estimatedCompletionTime) {
             db.execSQL("INSERT INTO " + MetricItemDB.MetricItemEntry.TABLE_NAME + " (" +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_TODO + MetricItemDB.COMMA_SEP +
@@ -391,7 +391,7 @@ public class TodoList extends Activity {
                     due_date + MetricItemDB.COMMA_SEP +
                     completed_time + MetricItemDB.COMMA_SEP +
                     completed + MetricItemDB.COMMA_SEP +
-                    duration + ");");
+                    estimatedCompletionTime + ");");
         }
 
         public void debugDatabase(SQLiteDatabase db) {
@@ -406,7 +406,7 @@ public class TodoList extends Activity {
                         new MetricEntry.SuperSimpleDate(c.getInt(3)) +
                         new MetricEntry.SuperSimpleDate(c.getInt(4)) +
                         c.getInt(5) +
-                        c.getInt(6)); // duration
+                        c.getInt(6)); // estimatedCompletionTime
 
                 c.moveToNext();
             }

@@ -14,20 +14,20 @@ public class MetricEntry {
     public SuperSimpleDate due_date; // Estimated completion time
     public SuperSimpleDate completed_date;
     public boolean isCompleted;
-    public int duration; // Estimated time needed to finish
+    public int estimatedCompletionTime; // Estimated time needed to finish
 
 
     public MetricEntry() {}
 
     public MetricEntry(String todo, String comment,
             SuperSimpleDate due_date, SuperSimpleDate completed_date,
-            int isCompleted, int duration) {
+            int isCompleted, int estimatedCompletionTime) {
         this.todo = todo;
         this.comment = comment;
         this.due_date = due_date;
         this.completed_date = completed_date;
         this.isCompleted = isCompleted == 1;
-        this.duration = duration;
+        this.estimatedCompletionTime = estimatedCompletionTime;
     }
 
     // Simple date format

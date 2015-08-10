@@ -27,6 +27,7 @@ public class AddMetricActivity extends Activity {
     public int year, month, day, hour, minute;
     public static String dateDue = "";
     public static String TAG = "Metrix";
+    public int estimatedCompletionTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,19 @@ public class AddMetricActivity extends Activity {
 
         Bundle b = getIntent().getExtras();
         if (b != null && b.containsKey("todo")) {
-            Log.i(TAG, b.getString("todo"));
+            ((EditText) findViewById(R.id.editText)).setText(b.getString("todo"));
+            ((EditText) findViewById(R.id.editText3)).setText(b.getString("comment"));
+
+            String duetime = ((b.getInt("duedate") >> 2) % 100) +
+                    ":" + (b.getInt("duedate") % 100);
+            ((Button) findViewById(R.id.dueTimePicker)).setText(duetime);
+
+            String duedate = ((b.getInt("duedate") >> 8) % 100) + "/" +
+                    ((b.getInt("duedate") >> 6) % 100) + "/" +
+                    ((b.getInt("duedate") >> 4) % 100);
+            ((Button) findViewById(R.id.dueDatePicker)).setText(duedate);
+
+            estimatedCompletionTime = b.getInt("estimatedCompletionTime");
         }
     }
 
