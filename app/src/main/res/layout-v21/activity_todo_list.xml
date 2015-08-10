@@ -6,7 +6,7 @@
     android:id="@+id/table_layout"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:background="@color/mintgreen"
+    android:background="@drawable/bg"
     android:layout_height="fill_parent"
     android:clipToPadding="false"
     android:elevation="0dp"
@@ -24,6 +24,16 @@
         android:elevation="@dimen/button_elevation_material"
         android:stateListAnimator="@anim/button_anim"
         android:id="@+id/button1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:text="Metrix"
+        android:textSize="@dimen/abc_text_size_title_material"
+        android:textColor="@color/primary_material_light"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/metrix_default_margin"
+        android:layout_height="wrap_content" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
