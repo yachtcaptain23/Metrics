@@ -207,9 +207,10 @@ public class TodoList extends Activity {
                 tv_temp.setTextColor(Color.BLUE);
                 duedate_tl.addView(tv_temp);
             }
+
             MetricEntry metricEntry = new MetricEntry(bundle.getString("task"),
                         bundle.getString("comments"),
-                        new MetricEntry.SuperSimpleDate(1234567890),
+                        new MetricEntry.SuperSimpleDate(Integer.parseInt(bundle.getString("duedate"))),
                         new MetricEntry.SuperSimpleDate(0),
                         4,
                         10020);
@@ -312,6 +313,7 @@ public class TodoList extends Activity {
                                     ev.getX(0) >= (downXPointer - CLICK_DELTA)) {
                                 // Edit
                                 Bundle bundle = new Bundle();
+                                Log.i("albewang", "Trying to edit with due:" + metricEntry.getDueDate());
                                 bundle.putString("todo", metricEntry.todo);
                                 bundle.putString("comment", metricEntry.comment);
                                 bundle.putInt("estimatedCompletionTime", metricEntry.estimatedCompletionTime);

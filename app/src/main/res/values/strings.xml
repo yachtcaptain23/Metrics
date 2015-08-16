@@ -8,4 +8,5 @@
     <string name="pick_due_time">Due time</string>
     <string name="back_button">Back</string>
     <string name="add_button">Add</string>
+    <string name="title_activity_chart">ChartActivity</string>
 </resources>

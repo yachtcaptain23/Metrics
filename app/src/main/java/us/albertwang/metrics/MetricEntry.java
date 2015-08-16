@@ -1,5 +1,8 @@
 package us.albertwang.metrics;
 
+import android.util.Log;
+
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.text.DateFormat;
 import java.util.Locale;
@@ -33,7 +36,7 @@ public class MetricEntry {
     // Simple date format
     public static class SuperSimpleDate {
         //YYMMDDHHMM
-        int currentDate;
+        int currentDate, year, month, day, hour, minute;
         public SuperSimpleDate() {
             currentDate = 0;
         }
@@ -42,13 +45,18 @@ public class MetricEntry {
             currentDate = ssd;
         }
 
-        public SuperSimpleDate(int year, int month, int day,
-            int hour, int minute) {
-            currentDate =   minute +
-                    (1<<2) * hour +
-                    (1<<4) * day +
-                    (1<<6) * month +
-                    (1<<8) * year;
+        public SuperSimpleDate(int _year, int _month, int _day,
+            int _hour, int _minute) {
+            currentDate =   _minute +
+                    (1<<2) * _hour +
+                    (1<<4) * _day +
+                    (1<<6) * _month +
+                    (1<<8) * _year;
+            year = _year;
+            month = _month;
+            day = _day;
+            hour = _hour;
+            minute = _minute;
         }
 
         public int getCurrentDate() {
@@ -57,6 +65,50 @@ public class MetricEntry {
 
         public void setCurrentDate(int newDate) {
             currentDate = newDate;
+            minute = newDate % 100;
+            hour = (newDate >> 2) % 100;
+            day = (newDate >> 4) % 100;
+            month = (newDate >> 6) % 100;
+            year = (newDate >> 8);
+        }
+
+        public static String getMonth(int m) {
+            switch (m) {
+                case 1: return "Jan.";
+                case 2: return "Feb.";
+                case 3: return "Mar.";
+                case 4: return "Apr.";
+                case 5: return "May";
+                case 6: return "June";
+                case 7: return "July";
+                case 8: return "Aug.";
+                case 9: return "Sept.";
+                case 10: return "Oct.";
+                case 11: return "Nov.";
+                default: return "Dec";
+            }
+        }
+
+        /**
+         * Pretty format informs the due date based on a diff between current time
+         * and due time rounded the largest time segment (e.g. X Years, Y Months, Z Days)
+         */
+        public static String getDueDatePrettyFormat() {
+            Calendar cal = Calendar.getInstance();
+            cal.getTime();
+            // DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+            DateFormat df = new SimpleDateFormat("yy");
+            Log.i("albewang", "month: " + df.format(cal.getTime()));
+            df = new SimpleDateFormat("MM");
+            Log.i("albewang", "month: " + df.format(cal.getTime()));
+            df = new SimpleDateFormat("dd");
+            Log.i("albewang", "day: " + df.format(cal.getTime()));
+            return "";
+        }
+
+        public String completedDatePrettyFormat() {
+            Calendar cal = Calendar.getInstance();
+            return "";
         }
     }
 

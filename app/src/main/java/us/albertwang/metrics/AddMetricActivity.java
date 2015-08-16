@@ -1,6 +1,7 @@
 package us.albertwang.metrics;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -34,11 +35,14 @@ public class AddMetricActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_metric);
 
+        MetricEntry.SuperSimpleDate.getDueDatePrettyFormat();
+
         Bundle b = getIntent().getExtras();
         if (b != null && b.containsKey("todo")) {
             ((EditText) findViewById(R.id.editText)).setText(b.getString("todo"));
             ((EditText) findViewById(R.id.editText3)).setText(b.getString("comment"));
 
+            Log.i("albewang", "" + b.getInt("duedate"));
             String duetime = ((b.getInt("duedate") >> 2) % 100) +
                     ":" + (b.getInt("duedate") % 100);
             ((Button) findViewById(R.id.dueTimePicker)).setText(duetime);
@@ -50,6 +54,15 @@ public class AddMetricActivity extends Activity {
 
             estimatedCompletionTime = b.getInt("estimatedCompletionTime");
         }
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+        // Remember that you should never show the action bar if the
+        // status bar is hidden, so hide that too if necessary.
+        ActionBar actionBar = getActionBar();
+        actionBar.hide();
     }
 
     public void saveSettings(View v) {
