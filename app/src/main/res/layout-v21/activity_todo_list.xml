@@ -9,6 +9,7 @@
     android:layout_height="fill_parent"
     android:clipToPadding="false"
     android:elevation="0dp"
+    android:background="@drawable/bg"
     android:layout_toStartOf="@+id/day_due_table_layout">
 
     <Button
