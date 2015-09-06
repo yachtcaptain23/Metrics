@@ -26,7 +26,8 @@ import java.util.Calendar;
 public class AddMetricActivity extends Activity {
 
     public int year, month, day, hour, minute;
-    public static String dateDue = "";
+    public static String dueDate = "";
+    public static String dueTime = "";
     public static String TAG = "Metrix";
     public int estimatedCompletionTime = 0;
 
@@ -35,7 +36,7 @@ public class AddMetricActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_metric);
 
-        MetricEntry.SuperSimpleDate.getDueDatePrettyFormat();
+        // MetricEntry.SuperSimpleDate.getDueDatePrettyFormat();
 
         Bundle b = getIntent().getExtras();
         if (b != null && b.containsKey("todo")) {
@@ -43,14 +44,11 @@ public class AddMetricActivity extends Activity {
             ((EditText) findViewById(R.id.editText3)).setText(b.getString("comment"));
 
             Log.i("albewang", "" + b.getInt("duedate"));
-            String duetime = ((b.getInt("duedate") >> 2) % 100) +
-                    ":" + (b.getInt("duedate") % 100);
-            ((Button) findViewById(R.id.dueTimePicker)).setText(duetime);
+            dueTime = b.getString("dueTime");
+            ((Button) findViewById(R.id.dueTimePicker)).setText(dueTime);
 
-            String duedate = ((b.getInt("duedate") >> 8) % 100) + "/" +
-                    ((b.getInt("duedate") >> 6) % 100) + "/" +
-                    ((b.getInt("duedate") >> 4) % 100);
-            ((Button) findViewById(R.id.dueDatePicker)).setText(duedate);
+            dueDate = b.getString("dueDate");
+            ((Button) findViewById(R.id.dueDatePicker)).setText(dueDate);
 
             estimatedCompletionTime = b.getInt("estimatedCompletionTime");
         }
@@ -70,7 +68,9 @@ public class AddMetricActivity extends Activity {
         EditText commentsEditText = (EditText) findViewById(R.id.editText3);
         Bundle bundle = new Bundle();
         bundle.putString("task", taskEditText.getText().toString());
-        bundle.putString("duedate", dateDue);
+        bundle.putString("dueDate", dueDate);
+        bundle.putString("dueTime", dueTime);
+        bundle.putInt("laborType", MetricEntry.CREATIVE_LABOR);
         bundle.putString("comments", commentsEditText.getText().toString());
         Intent outIntent = new Intent();
         outIntent.putExtras(bundle);
@@ -112,10 +112,20 @@ public class AddMetricActivity extends Activity {
         }
 
         public void onDateSet(DatePicker view, int year, int month, int day) {
-            dateDue = Integer.toString(year) + Integer.toString(month) + Integer.toString(day);
-            Log.e(TAG, "New dueDate " + dateDue);
+            dueDate = Integer.toString(year) + "/";
+            if (month < 10) {
+                dueDate = dueDate + "0" + month + "/";
+            } else {
+                dueDate = dueDate + month + "/";
+            }
+
+            if (day < 10) {
+                dueDate = dueDate + "0" + day;
+            } else {
+                dueDate = dueDate + day;
+            }
             Button thisButton = (Button) findViewById(R.id.dueDatePicker);
-            thisButton.setText(year + "/" + month + "/" + day);
+            thisButton.setText(dueDate);
         }
     }
 
@@ -139,9 +149,19 @@ public class AddMetricActivity extends Activity {
         }
 
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            Log.i(TAG, "Select due time to be: " + hourOfDay + " " + minute);
+            if (hourOfDay < 10) {
+                dueTime = "0" + hourOfDay;
+            } else {
+                dueTime = "" + hourOfDay;
+            }
+
+            if (minute < 10) {
+                dueTime = dueTime + ":0" + minute;
+            } else {
+                dueTime = dueTime + ":" + minute;
+            }
             Button thisButton = (Button) findViewById(R.id.dueTimePicker);
-            thisButton.setText(hourOfDay + ":" + minute);
+            thisButton.setText(dueTime);
         }
     }
 

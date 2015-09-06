@@ -24,6 +24,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 
 
@@ -96,22 +97,41 @@ public class TodoList extends Activity {
         Cursor c = mDatabase.rawQuery(query, null);
 
         // Start filling in the TodoList
-        MetricEntry.SuperSimpleDate ssd = new MetricEntry.SuperSimpleDate();
         Log.e(TAG, "Current count = " + c.getCount());
         c.moveToFirst();
 
         for (int x=0; x<c.getCount(); x++) {
+            String dueDate = getDateTimeValues(c.getString(3))[0];
+            String dueTime = getDateTimeValues(c.getString(3))[1];
+            String completedDate = getDateTimeValues(c.getString(4))[0];
+            String completedTime = getDateTimeValues(c.getString(4))[1];
+
             MetricEntry metricEntry = new MetricEntry(
                     c.getString(1), //TODO
                     c.getString(2), // Comment
-                    new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
-                    new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
+                    dueDate,
+                    dueTime,
+                    completedDate,
+                    completedTime,
                     c.getInt(5), // isCompleted
-                    c.getInt(6)); // estimatedCompletionTime
+                    c.getInt(6), // Labor type
+                    c.getInt(7)); // estimatedCompletionTime
 
             mMetricEntryArrayList.add(metricEntry);
             c.moveToNext();
         }
+    }
+
+    /**
+     * Returns two strings consisting of YYYY/MM/DD and of HH:MM
+     * @param uglyCombo
+     * @return
+     */
+    private static String[] getDateTimeValues(String uglyCombo) {
+        String [] pieces = new String[2];
+        pieces[0] = uglyCombo.substring(0, 4) + "/" + uglyCombo.substring(4, 6) + "/" + uglyCombo.substring(6, 8);
+        pieces[1] = uglyCombo.substring(8, 10) + ":" + uglyCombo.substring(10);
+        return pieces;
     }
 
     private void loadDatabase(TableLayout taskTableLayout, TableLayout duedateTableLayout) {
@@ -121,18 +141,25 @@ public class TodoList extends Activity {
         Cursor c = mDatabase.rawQuery(query, null);
 
         // Start filling in the TodoList
-        MetricEntry.SuperSimpleDate ssd = new MetricEntry.SuperSimpleDate();
         Log.e(TAG, "Current count = " + c.getCount());
         c.moveToFirst();
 
         for (int x=0; x<c.getCount(); x++) {
+            String dueDate = getDateTimeValues(c.getString(3))[0];
+            String dueTime = getDateTimeValues(c.getString(3))[1];
+            String completedDate = getDateTimeValues(c.getString(4))[0];
+            String completedTime = getDateTimeValues(c.getString(4))[1];
+
             MetricEntry metricEntry = new MetricEntry(
                     c.getString(1), //TODO
                     c.getString(2), // Comment
-                    new MetricEntry.SuperSimpleDate(c.getInt(3)), // due_date
-                    new MetricEntry.SuperSimpleDate(c.getInt(4)), // completed_date
+                    dueDate,
+                    dueTime,
+                    completedDate, // completed_date
+                    completedTime,
                     c.getInt(5), // isCompleted
-                    c.getInt(6)); // estimatedCompletionTime
+                    c.getInt(6), // Labor type
+                    c.getInt(7)); // estimatedCompletionTime
             TextView newTask = new TextView(getApplicationContext());
             newTask.setText(metricEntry.todo);
             newTask.setTextColor(Color.BLUE);
@@ -142,7 +169,7 @@ public class TodoList extends Activity {
 
             // Get due_date
             TextView newDueDate = new TextView(getApplicationContext());
-            newDueDate.setText(Integer.toString(metricEntry.due_date.getCurrentDate()));
+            newDueDate.setText(metricEntry.getDueDate());
             newDueDate.setTextColor(Color.BLUE);
             duedateTableLayout.addView(newDueDate);
 
@@ -174,13 +201,18 @@ public class TodoList extends Activity {
 
         while (metricEntryIter.hasNext()) {
             MetricEntry metricEntry = (MetricEntry) metricEntryIter.next();
-            mDatabaseHelper.addMetricEntry(mDatabase, metricEntry.todo,
-                    metricEntry.comment, metricEntry.getDueDate(), metricEntry.getCompletedDate(),
-                    metricEntry.getCompleted(), metricEntry.estimatedCompletionTime);
+            mDatabaseHelper.addMetricEntry(mDatabase,
+                    metricEntry.todo,
+                    metricEntry.comment,
+                    metricEntry.getDueFormatted(),
+                    metricEntry.getCompletedFormatted(),
+                    metricEntry.getCompleted(),
+                    metricEntry.getLaborType(),
+                    metricEntry.estimatedCompletionTime);
         }
 
         Log.i("Metrics", "onStop() - Closing mDatabaseHelper");
-        mDatabaseHelper.debugDatabase(mDatabase);
+        // mDatabaseHelper.debugDatabase(mDatabase);
         mDatabaseHelper.close();
 
     }
@@ -203,17 +235,20 @@ public class TodoList extends Activity {
                 // Get due_date
                 TableLayout duedate_tl = (TableLayout) findViewById(R.id.day_due_table_layout);
                 tv_temp = new TextView(getApplicationContext());
-                tv_temp.setText(bundle.getString("duedate"));
+                tv_temp.setText(bundle.getString("dueDate"));
                 tv_temp.setTextColor(Color.BLUE);
                 duedate_tl.addView(tv_temp);
             }
 
             MetricEntry metricEntry = new MetricEntry(bundle.getString("task"),
                         bundle.getString("comments"),
-                        new MetricEntry.SuperSimpleDate(Integer.parseInt(bundle.getString("duedate"))),
-                        new MetricEntry.SuperSimpleDate(0),
-                        4,
-                        10020);
+                        bundle.getString("dueDate"), // Due date
+                        bundle.getString("dueTime"),
+                        "2015/12/31", // Completion date
+                        "00:00",
+                        0, // Is it completed?
+                        bundle.getInt("laborType"), // 0:Physical, 1:Mental
+                        1); // Time required for completion
 
             mMetricEntryArrayList.add(metricEntry);
 
@@ -283,7 +318,7 @@ public class TodoList extends Activity {
             holder.mTextViewTask.setText(metricEntry.todo);
             holder.mTextViewComment.setText(metricEntry.comment);
             holder.mTextViewCountdown.setText(Integer.toString(metricEntry.estimatedCompletionTime));
-            holder.mTextViewDate.setText(Integer.toString(metricEntry.getDueDate()));
+            holder.mTextViewDate.setText(metricEntry.getDueDate());
             // Todo: Change color based on estimatedCompletionTime left
             final int thisPos = holder.getLayoutPosition();
 
@@ -299,12 +334,7 @@ public class TodoList extends Activity {
                             if (ev.getX(0) >= (downXPointer + SWIPE_DELTA)) {
                                 // Swipe to the right
                                 Calendar c = Calendar.getInstance();
-                                metricEntry.setCompletedDate(new MetricEntry.SuperSimpleDate(
-                                                c.get(Calendar.YEAR),
-                                                c.get(Calendar.MONTH),
-                                                c.get(Calendar.DAY_OF_MONTH),
-                                                c.get(Calendar.HOUR),
-                                                c.get(Calendar.MINUTE)));
+                                metricEntry.setCompletedDate(c);
                                 metricEntry.setCompleted(true);
                                 mCompletedMetrics.add(metricEntry);
                                 mMetricEntryArrayList.remove(thisPos);
@@ -317,7 +347,9 @@ public class TodoList extends Activity {
                                 bundle.putString("todo", metricEntry.todo);
                                 bundle.putString("comment", metricEntry.comment);
                                 bundle.putInt("estimatedCompletionTime", metricEntry.estimatedCompletionTime);
-                                bundle.putInt("duedate", metricEntry.getDueDate());
+                                bundle.putString("dueDate", metricEntry.getDueDate());
+                                bundle.putString("dueTime", metricEntry.getDueTime());
+                                bundle.putInt("laborType", metricEntry.laborType);
                                 bundle.putInt("position", thisPos);
 
                                 Intent addActivityIntent = new Intent(getApplicationContext(), AddMetricActivity.class);
@@ -376,14 +408,15 @@ public class TodoList extends Activity {
         }
 
         public void addMetricEntry(SQLiteDatabase db, String todo, String comment,
-            int due_date, int completed_time, int completed, int estimatedCompletionTime) {
+            String due_date, String completed_time, int completed, int laborType, int estimatedCompletionTime) {
             db.execSQL("INSERT INTO " + MetricItemDB.MetricItemEntry.TABLE_NAME + " (" +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_ID + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_TODO + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_COMMENT + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_DUE_DATE + MetricItemDB.COMMA_SEP +
-                    MetricItemDB.MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_COMPLETED_DATE + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_COMPLETED + MetricItemDB.COMMA_SEP +
+                    MetricItemDB.MetricItemEntry.COLUMN_NAME_LABOR_TYPE + MetricItemDB.COMMA_SEP +
                     MetricItemDB.MetricItemEntry.COLUMN_NAME_DURATION + ")" +
 
                     " VALUES (" +
@@ -393,9 +426,10 @@ public class TodoList extends Activity {
                     due_date + MetricItemDB.COMMA_SEP +
                     completed_time + MetricItemDB.COMMA_SEP +
                     completed + MetricItemDB.COMMA_SEP +
+                    laborType + MetricItemDB.COMMA_SEP +
                     estimatedCompletionTime + ");");
         }
-
+/*
         public void debugDatabase(SQLiteDatabase db) {
             String query = "SELECT * from " + MetricItemDB.MetricItemEntry.TABLE_NAME;
             Cursor c = db.rawQuery(query, null);
@@ -408,13 +442,14 @@ public class TodoList extends Activity {
                         new MetricEntry.SuperSimpleDate(c.getInt(3)) +
                         new MetricEntry.SuperSimpleDate(c.getInt(4)) +
                         c.getInt(5) +
+                        c.getInt(7) +
                         c.getInt(6)); // estimatedCompletionTime
 
                 c.moveToNext();
             }
 
             c.close();
-        }
+        }*/
     }
 
     /**
@@ -432,9 +467,10 @@ public class TodoList extends Activity {
                         MetricItemEntry.COLUMN_NAME_ID + PRIMARY_TYPE + COMMA_SEP+
                         MetricItemEntry.COLUMN_NAME_TODO + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMMENT + TEXT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_DUE_DATE + INT_TYPE + COMMA_SEP +
-                        MetricItemEntry.COLUMN_NAME_COMPLETED_TIME + INT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_DUE_DATE + TEXT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_COMPLETED_DATE + TEXT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_COMPLETED + INT_TYPE + COMMA_SEP +
+                        MetricItemEntry.COLUMN_NAME_LABOR_TYPE + INT_TYPE + COMMA_SEP +
                         MetricItemEntry.COLUMN_NAME_DURATION + INT_TYPE +
                 ")";
 
@@ -450,8 +486,9 @@ public class TodoList extends Activity {
             public static final String COLUMN_NAME_TODO = "todo"; // String that shouldn't be multi-line
             public static final String COLUMN_NAME_COMMENT = "comment"; // Standard multi-line String
             public static final String COLUMN_NAME_DUE_DATE = "due_date"; // handled like a calendar date
-            public static final String COLUMN_NAME_COMPLETED_TIME = "completed_date"; // handled like a calendar date/time
+            public static final String COLUMN_NAME_COMPLETED_DATE = "completed_date"; // handled like a calendar date/time
             public static final String COLUMN_NAME_COMPLETED = "Completed"; // handled like a boolean
+            public static final String COLUMN_NAME_LABOR_TYPE = "labor_type"; // Labor type specification in MetricEntry.
             public static final String COLUMN_NAME_DURATION = "Duration"; // How long it will take in minutes
         }
     }

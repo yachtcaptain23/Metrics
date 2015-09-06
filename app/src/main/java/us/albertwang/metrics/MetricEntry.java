@@ -5,6 +5,7 @@ import android.util.Log;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.text.DateFormat;
+import java.util.GregorianCalendar;
 import java.util.Locale;
 
 /**
@@ -14,123 +15,87 @@ import java.util.Locale;
 public class MetricEntry {
     public String todo; // Headline
     public String comment; // Description
-    public SuperSimpleDate due_date; // Estimated completion time
-    public SuperSimpleDate completed_date;
+    public GregorianCalendar due_date; // Estimated completion time
+    public GregorianCalendar completed_date;
     public boolean isCompleted;
+    public int laborType;
     public int estimatedCompletionTime; // Estimated time needed to finish
 
+    public final static int MANUAL_LABOR = 0;
+    public final static int CREATIVE_LABOR = 1;
 
     public MetricEntry() {}
 
     public MetricEntry(String todo, String comment,
-            SuperSimpleDate due_date, SuperSimpleDate completed_date,
-            int isCompleted, int estimatedCompletionTime) {
+            String dueDate, String dueTime, String completedDate, String completedTime,
+            int isCompleted, int laborType, int estimatedCompletionTime) {
         this.todo = todo;
         this.comment = comment;
-        this.due_date = due_date;
-        this.completed_date = completed_date;
+
+
+
+        Log.i("albewang", "" + dueDate);
+        Log.i("albewang", "" + dueTime);
+        this.due_date = new GregorianCalendar();
+        this.due_date.set(
+                Integer.parseInt(dueDate.split("/")[0]), // year
+                Integer.parseInt(dueDate.split("/")[1]), // month
+                Integer.parseInt(dueDate.split("/")[2]), // day
+                Integer.parseInt(dueTime.split(":")[0]), // hour
+                Integer.parseInt(dueTime.split(":")[1]) // minute
+                );
+
+        this.completed_date = new GregorianCalendar();
+        this.completed_date.set(
+                Integer.parseInt(completedDate.split("/")[0]), // year
+                Integer.parseInt(completedDate.split("/")[1]), // month
+                Integer.parseInt(completedDate.split("/")[2]), // day
+                Integer.parseInt(completedTime.split(":")[0]), // hour
+                Integer.parseInt(completedTime.split(":")[1]) // minute
+        );
+
         this.isCompleted = isCompleted == 1;
+        this.laborType = laborType;
         this.estimatedCompletionTime = estimatedCompletionTime;
     }
 
-    // Simple date format
-    public static class SuperSimpleDate {
-        //YYMMDDHHMM
-        int currentDate, year, month, day, hour, minute;
-        public SuperSimpleDate() {
-            currentDate = 0;
-        }
-
-        public SuperSimpleDate(int ssd) {
-            currentDate = ssd;
-        }
-
-        public SuperSimpleDate(int _year, int _month, int _day,
-            int _hour, int _minute) {
-            currentDate =   _minute +
-                    (1<<2) * _hour +
-                    (1<<4) * _day +
-                    (1<<6) * _month +
-                    (1<<8) * _year;
-            year = _year;
-            month = _month;
-            day = _day;
-            hour = _hour;
-            minute = _minute;
-        }
-
-        public int getCurrentDate() {
-            return currentDate;
-        }
-
-        public void setCurrentDate(int newDate) {
-            currentDate = newDate;
-            minute = newDate % 100;
-            hour = (newDate >> 2) % 100;
-            day = (newDate >> 4) % 100;
-            month = (newDate >> 6) % 100;
-            year = (newDate >> 8);
-        }
-
-        public static String getMonth(int m) {
-            switch (m) {
-                case 1: return "Jan.";
-                case 2: return "Feb.";
-                case 3: return "Mar.";
-                case 4: return "Apr.";
-                case 5: return "May";
-                case 6: return "June";
-                case 7: return "July";
-                case 8: return "Aug.";
-                case 9: return "Sept.";
-                case 10: return "Oct.";
-                case 11: return "Nov.";
-                default: return "Dec";
-            }
-        }
-
-        /**
-         * Pretty format informs the due date based on a diff between current time
-         * and due time rounded the largest time segment (e.g. X Years, Y Months, Z Days)
-         */
-        public static String getDueDatePrettyFormat() {
-            Calendar cal = Calendar.getInstance();
-            cal.getTime();
-            // DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-            DateFormat df = new SimpleDateFormat("yy");
-            Log.i("albewang", "month: " + df.format(cal.getTime()));
-            df = new SimpleDateFormat("MM");
-            Log.i("albewang", "month: " + df.format(cal.getTime()));
-            df = new SimpleDateFormat("dd");
-            Log.i("albewang", "day: " + df.format(cal.getTime()));
-            return "";
-        }
-
-        public String completedDatePrettyFormat() {
-            Calendar cal = Calendar.getInstance();
-            return "";
-        }
+    /**
+     * @return YYYYMMDDHHmm
+     */
+    public String getDueFormatted() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+        return sdf.format(this.due_date.getTime());
     }
 
-    public int getDueDate() {
-        return this.due_date.getCurrentDate();
+    public String getDueDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+        return sdf.format(this.due_date.getTime());
     }
 
-    public void setDueDate(SuperSimpleDate dueDate) {
-        this.due_date = dueDate;
+    public String getDueTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        return sdf.format(this.due_date.getTime());
     }
 
-    public int getCompletedDate() {
-        return this.completed_date.getCurrentDate();
+    public String getCompletedFormatted() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+        return sdf.format(this.completed_date.getTime());
     }
 
-    public void setCompletedDate(SuperSimpleDate completedDate) {
-        this.completed_date = completedDate;
+    public String getCompletedDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        return sdf.format(this.completed_date.getTime());
+    }
+
+    public void setCompletedDate(Calendar completedDate) {
+        this.completed_date = (GregorianCalendar) completedDate;
     }
 
     public void setCompleted(boolean c) {
         this.isCompleted = c;
     }
+
+    public int getLaborType() { return this.laborType; }
 
     /**
      * Used for storing completion information in the SQL db.
